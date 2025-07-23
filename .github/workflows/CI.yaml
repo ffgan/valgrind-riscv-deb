@@ -42,7 +42,7 @@ jobs:
 
       - name: Copy deb package
         run: |
-          scp u22:~/*.deb ./
+          scp u22:~/valgrind*deb ./
 
       - name: Show deb package
         run: dir
@@ -51,4 +51,4 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: valgrind-deb
-          path: ./*.deb
+          path: ./valgrind*deb
