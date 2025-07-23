@@ -26,7 +26,7 @@ jobs:
 
       - name: Download debian's "valgrind 3.24 package control"
         run: |
-          ssh u22 "wget https://launchpad.net/ubuntu/+archive/primary/+sourcefiles/valgrind/1:3.24.0-0ubuntu2/valgrind_3.24.0-0ubuntu2.debian.tar.xz && tar -xf  valgrind_3.24.0-0ubuntu2.debian.tar.xz && cd valgrind_3.24.0-0ubuntu2 && ls -l "
+          ssh u22 "wget https://launchpad.net/ubuntu/+archive/primary/+sourcefiles/valgrind/1:3.24.0-0ubuntu2/valgrind_3.24.0-0ubuntu2.debian.tar.xz && tar -xf valgrind_3.24.0-0ubuntu2.debian.tar.xz && cd debian && ls -l "
 
       - name: Setup valgrind for debian package
         run: |
