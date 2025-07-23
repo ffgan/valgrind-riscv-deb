@@ -1,0 +1,52 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - "**"
+    tags:
+      - "**"
+
+jobs:
+  b2-posix:
+    strategy:
+      fail-fast: false
+
+    runs-on: self-hosted
+
+    steps:
+      - name: Show uname info
+        run: |
+          ssh u22 uname -a
+      - name: Download valgrind 3.25.1
+        run: |
+          ssh u22 "wget https://sourceware.org/pub/valgrind/valgrind-3.25.1.tar.bz2 && tar -xf valgrind-3.25.1.tar.bz2 && cd valgrind-3.25.1 && ls -l "
+
+      - name: Download debian's "valgrind 3.24 package control"
+        run: |
+          ssh u22 "wget https://launchpad.net/ubuntu/+archive/primary/+sourcefiles/valgrind/1:3.24.0-0ubuntu2/valgrind_3.24.0-0ubuntu2.debian.tar.xz && tar -xf  valgrind_3.24.0-0ubuntu2.debian.tar.xz && cd valgrind_3.24.0-0ubuntu2 && ls -l "
+
+      - name: Setup valgrind for debian package
+        run: |
+          ssh u22 "cp -r debian/ valgrind-3.25.1/ && mv valgrind-3.25.1.tar.bz2 valgrind_3.25.1.orig.tar.bz2 && cd valgrind-3.25.1/ && dch -v 1:3.25.1-0ubuntu1 "New upstream release Valgrind 3.25.1"
+
+      - name: Modify debian/control file to allow riscv64 package
+        run: |
+          ssh u22 "cd valgrind-3.25.1 && sed -i '23s/$/ riscv64/;48s/$/ riscv64/' debian/control"
+
+      - name: Build deb package
+        run: |
+          ssh u22 "cd valgrind-3.25.1 && dpkg-buildpackage -us -uc"
+
+      - name: Copy deb package
+        run: |
+          scp u22:~/*.deb ./
+
+      - name: Show deb package
+        run: dir
+
+      - name: Upload deb package
+        uses: actions/upload-artifact@v4
+        with:
+          name: valgrind-deb
+          path: ./*.deb
