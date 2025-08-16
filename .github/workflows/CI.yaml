@@ -79,11 +79,11 @@ jobs:
 
       - name: Build deb package
         run: |
-          ${{matrix.container.container-exec}} bash -c "cd valgrind-3.25.1 && dpkg-buildpackage -us -uc"
+          ${{matrix.container.container-exec}} bash -c "cd valgrind-3.25.1 && dpkg-buildpackage -us -uc && cd .. && ls -l ./ && ls -l / && pwd"
 
       - name: Copy deb package
         run: |
-          docker cp ${{matrix.container.container-name}}:/valgrind*deb ./
+          docker cp ${{matrix.container.container-name}}:/~/valgrind*deb ./
 
       - name: Show deb package
         run: ls -l
