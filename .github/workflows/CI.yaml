@@ -69,6 +69,14 @@ jobs:
         run: |
           ${{matrix.container.container-exec}} bash -c "cd valgrind-3.25.1 && sed -i '23s/$/ riscv64/;48s/$/ riscv64/' debian/control"
 
+      - name: prepare for test
+        run: |
+          ${{matrix.container.container-exec}} bash -c "cd valgrind-3.25.1 && ./autogen.sh &&  ./configure && make "
+
+      - name:  test
+        run: |
+          ${{matrix.container.container-exec}} bash -c "cd valgrind-3.25.1 && make regtest"
+
       - name: Build deb package
         run: |
           ${{matrix.container.container-exec}} bash -c "cd valgrind-3.25.1 && dpkg-buildpackage -us -uc"
