@@ -50,7 +50,7 @@ jobs:
 
       - name: install dep
         run: |
-          ${{matrix.container.container-exec}} bash -c "apt update && apt install -y curl tar bzip2 build-essential git  debhelper-compat dctrl-tools chrpath libbz2-dev liblzma-dev libzstd-dev libicu-dev mpi-default-dev bison flex docbook-to-man help2man xsltproc doxygen dh-python python3-all-dev python3-numpy graphviz dpkg-dev wget  gdb pkgconf docbook-xsl docbook-xml"
+          ${{matrix.container.container-exec}} bash -c "apt update && apt install -y zip curl tar bzip2 build-essential git  debhelper-compat dctrl-tools chrpath libbz2-dev liblzma-dev libzstd-dev libicu-dev mpi-default-dev bison flex docbook-to-man help2man xsltproc doxygen dh-python python3-all-dev python3-numpy graphviz dpkg-dev wget  gdb pkgconf docbook-xsl docbook-xml"
 
       - name: Download valgrind 3.25.1
         run: |
@@ -80,10 +80,14 @@ jobs:
       - name: Build deb package
         run: |
           ${{matrix.container.container-exec}} bash -c "cd valgrind-3.25.1 && dpkg-buildpackage -us -uc && cd .. && ls -l ./ && ls -l / && pwd"
+      
+      - name: zip deb package
+        run: |
+          ${{matrix.container.container-exec}} bash -c "zip valgrind-all.zip *deb"
 
       - name: Copy deb package
         run: |
-          docker cp ${{matrix.container.container-name}}:/~/valgrind*deb ./
+          docker cp ${{matrix.container.container-name}}:/valgrind-all.zip ./
 
       - name: Show deb package
         run: ls -l
@@ -91,5 +95,5 @@ jobs:
       - name: Upload deb package
         uses: actions/upload-artifact@v4
         with:
-          name: valgrind-deb
-          path: ./valgrind*deb
+          name: valgrind-all.zip
+          path: ./valgrind-all.zip
