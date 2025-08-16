@@ -9,43 +9,76 @@ on:
 
 jobs:
   b2-posix:
+    runs-on: ubuntu-latest
+
     strategy:
-      fail-fast: false
-
-    runs-on: self-hosted
-
+      matrix:
+        container: [
+            {
+              image: ubuntu:22.04,
+              container-exec: "docker exec u22",
+              container-name: "u22",
+            },
+            {
+              image: ubuntu:24.04,
+              container-exec: "docker exec u24",
+              container-name: "u24",
+            },
+            # {
+            #   image: debian:13,
+            #   container-exec: "docker exec deb13",
+            #   container-name: "deb13",
+            # },
+          ]
     steps:
+      - name: setup qemu
+        uses: docker/setup-qemu-action@v3
+        with:
+          platforms: riscv64
+
+      - name: setup docker  Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: start container
+        run: |
+          docker run --platform linux/riscv64 -d --name  ${{matrix.container.container-name}} -v ./:/src ${{matrix.container.image}} bash -c "while true; do sleep 30; done"
+
       - name: Show uname info
         run: |
-          ssh u22 uname -a
+          ${{matrix.container.container-exec}} uname -a
+          ${{matrix.container.container-exec}} cat /etc/os-release
+
+      - name: install dep
+        run: |
+          ${{matrix.container.container-exec}} bash -c "apt update && apt install -y curl tar bzip2 build-essential git  debhelper-compat dctrl-tools chrpath libbz2-dev liblzma-dev libzstd-dev libicu-dev mpi-default-dev bison flex docbook-to-man help2man xsltproc doxygen dh-python python3-all-dev python3-numpy graphviz dpkg-dev"
+
       - name: Download valgrind 3.25.1
         run: |
-          ssh claw "wget https://sourceware.org/pub/valgrind/valgrind-3.25.1.tar.bz2"
-          scp claw:/root/valgrind-3.25.1.tar.bz2 u22:/root/valgrind-3.25.1.tar.bz2
-          ssh u22 "tar -xf valgrind-3.25.1.tar.bz2 && cd valgrind-3.25.1 && ls -l "
+          ${{matrix.container.container-exec}} bash -c "wget https://answers.launchpad.net/ubuntu/+archive/primary/+sourcefiles/valgrind/1:3.25.1-0ubuntu1/valgrind_3.25.1.orig.tar.bz2"
+          ${{matrix.container.container-exec}} bash -c "tar -xf valgrind_3.25.1.orig.tar.bz2 && cd valgrind-3.25.1 && ls -l "
 
-      - name: Download debian's "valgrind 3.24 package control"
+      - name: Download debian's "valgrind 3.25 package control"
         run: |
-          ssh u22 "wget https://launchpad.net/ubuntu/+archive/primary/+sourcefiles/valgrind/1:3.24.0-0ubuntu2/valgrind_3.24.0-0ubuntu2.debian.tar.xz && tar -xf valgrind_3.24.0-0ubuntu2.debian.tar.xz && cd debian && ls -l "
+          ${{matrix.container.container-exec}} bash -c "wget https://answers.launchpad.net/ubuntu/+archive/primary/+sourcefiles/valgrind/1:3.25.1-0ubuntu1/valgrind_3.25.1-0ubuntu1.debian.tar.xz && tar -xf valgrind_3.25.1-0ubuntu1.debian.tar.xz && cd debian && ls -l "
 
       - name: Setup valgrind for debian package
         run: |
-          ssh u22 'cp -r debian/ valgrind-3.25.1/ && mv valgrind-3.25.1.tar.bz2 valgrind_3.25.1.orig.tar.bz2 && cd valgrind-3.25.1/ && dch -v 1:3.25.1-0ubuntu1 "New upstream release Valgrind 3.25.1"'
+          ${{matrix.container.container-exec}} bash -c 'cp -r debian/ valgrind-3.25.1/'
 
       - name: Modify debian/control file to allow riscv64 package
         run: |
-          ssh u22 "cd valgrind-3.25.1 && sed -i '23s/$/ riscv64/;48s/$/ riscv64/' debian/control"
+          ${{matrix.container.container-exec}} bash -c "cd valgrind-3.25.1 && sed -i '23s/$/ riscv64/;48s/$/ riscv64/' debian/control"
 
       - name: Build deb package
         run: |
-          ssh u22 "cd valgrind-3.25.1 && dpkg-buildpackage -us -uc"
+          ${{matrix.container.container-exec}} bash -c "cd valgrind-3.25.1 && dpkg-buildpackage -us -uc"
 
       - name: Copy deb package
         run: |
-          scp u22:~/valgrind*deb ./
+          docker cp ${{matrix.container.container-name}}:/valgrind*deb ./
 
       - name: Show deb package
-        run: dir
+        run: ls -l
 
       - name: Upload deb package
         uses: actions/upload-artifact@v4
