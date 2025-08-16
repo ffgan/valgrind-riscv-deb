@@ -50,7 +50,7 @@ jobs:
 
       - name: install dep
         run: |
-          ${{matrix.container.container-exec}} bash -c "apt update && apt install -y curl tar bzip2 build-essential git  debhelper-compat dctrl-tools chrpath libbz2-dev liblzma-dev libzstd-dev libicu-dev mpi-default-dev bison flex docbook-to-man help2man xsltproc doxygen dh-python python3-all-dev python3-numpy graphviz dpkg-dev"
+          ${{matrix.container.container-exec}} bash -c "apt update && apt install -y curl tar bzip2 build-essential git  debhelper-compat dctrl-tools chrpath libbz2-dev liblzma-dev libzstd-dev libicu-dev mpi-default-dev bison flex docbook-to-man help2man xsltproc doxygen dh-python python3-all-dev python3-numpy graphviz dpkg-dev wget"
 
       - name: Download valgrind 3.25.1
         run: |
